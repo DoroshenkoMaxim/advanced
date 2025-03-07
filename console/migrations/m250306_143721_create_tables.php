@@ -1,7 +1,6 @@
 <?php
 
 use yii\db\Migration;
-use Faker\Factory as Faker;
 
 /**
  * Class m250306_143721_create_tables
@@ -57,9 +56,6 @@ class m250306_143721_create_tables extends Migration
         // Внешние ключи для posts_track
         $this->addForeignKey('fk-posts_track-post_id', '{{%posts_track}}', 'post_id', '{{%posts}}', 'id', 'CASCADE');
         $this->addForeignKey('fk-posts_track-user_id', '{{%posts_track}}', 'user_id', '{{%user}}', 'id', 'CASCADE');
-
-        // Генерация данных с использованием Faker
-        $this->generateFakeData();
     }
 
     public function safeDown()
@@ -75,74 +71,5 @@ class m250306_143721_create_tables extends Migration
 
         $this->dropForeignKey('fk-posts-created_by', '{{%posts}}');
         $this->dropTable('{{%posts}}');
-    }
-
-    private function generateFakeData()
-    {
-        $faker = Faker::create();
-        $userIds = $this->getDb()->createCommand('SELECT id FROM {{%user}}')->queryColumn();
-
-        $batchSize = 10000; // Размер пакета
-        $postData = [];
-        $postViewsData = [];
-        $postSubscribersData = [];
-
-        for ($i = 1; $i <= 1000000; $i++) {
-            $createdAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
-            $updatedAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
-            $userId = $faker->randomElement($userIds);
-
-            $postData[] = [
-                'name' => $faker->sentence(6),
-                'text' => $faker->paragraph(10),
-                'fields' => $faker->text(50),
-                'created_by' => $userId,
-                'created_at' => $createdAt,
-                'updated_at' => $updatedAt,
-            ];
-
-            // Генерация просмотров
-            $viewsCount = $faker->numberBetween(100, 150);
-            for ($view = 0; $view < $viewsCount; $view++) {
-                $postViewsData[] = [
-                    'post_id' => $i,
-                    'visitor_id' => $faker->randomElement($userIds),
-                    'view_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
-                ];
-            }
-
-            // Генерация подписчиков
-            $subscriberCount = $faker->numberBetween(10, 15);
-            $subscribers = $faker->randomElements($userIds, $subscriberCount, false);
-            foreach ($subscribers as $subscriber) {
-                $postSubscribersData[] = [
-                    'post_id' => $i,
-                    'user_id' => $subscriber,
-                    'track_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
-                ];
-            }
-
-            // Вставляем пакетами
-            if ($i % $batchSize === 0) {
-                $this->batchInsert('{{%posts}}', ['name', 'text', 'fields', 'created_by', 'created_at', 'updated_at'], $postData);
-                $this->batchInsert('{{%posts_visitors}}', ['post_id', 'visitor_id', 'view_at'], $postViewsData);
-                $this->batchInsert('{{%posts_track}}', ['post_id', 'user_id', 'track_at'], $postSubscribersData);
-
-                $postData = [];
-                $postViewsData = [];
-                $postSubscribersData = [];
-            }
-        }
-
-        // Вставляем оставшиеся записи
-        if (!empty($postData)) {
-            $this->batchInsert('{{%posts}}', ['name', 'text', 'fields', 'created_by', 'created_at', 'updated_at'], $postData);
-        }
-        if (!empty($postViewsData)) {
-            $this->batchInsert('{{%posts_visitors}}', ['post_id', 'visitor_id', 'view_at'], $postViewsData);
-        }
-        if (!empty($postSubscribersData)) {
-            $this->batchInsert('{{%posts_track}}', ['post_id', 'user_id', 'track_at'], $postSubscribersData);
-        }
     }
 }

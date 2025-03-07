@@ -3,9 +3,9 @@
 use yii\db\Migration;
 
 /**
- * Class m250307_124739_optimize_indices_and_counters
+ * Class m250307_190056_optimize_indices_and_counters
  */
-class m250307_124739_optimize_indices_and_counters extends Migration
+class m250307_190056_optimize_indices_and_counters extends Migration
 {
     public function safeUp()
     {
