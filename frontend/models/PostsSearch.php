@@ -15,8 +15,8 @@ class PostsSearch extends Posts
     public function rules()
     {
         return [
-            [['id', 'created_by', 'created_at', 'updated_at', 'viewsCount', 'followersCount'], 'integer'],
-            [['name', 'text', 'fields', 'createdByUsername'], 'safe'],
+            [[], 'integer'],
+            [['name'], 'safe'],
         ];
     }
 

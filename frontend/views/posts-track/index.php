@@ -25,12 +25,12 @@ $this->params['breadcrumbs'][] = $this->title;
 
     <?= GridView::widget([
         'dataProvider' => $dataProvider,
-        'filterModel' => $searchModel,
         'columns' => [
             ['class' => 'yii\grid\SerialColumn'],
             [
                 'attribute' => 'post_id',
                 'label' => 'Post',
+                'enableSorting' => false,
                 'value' => function ($model) {
                     return $model->post ? $model->post->name : 'Unknown';
                 }
@@ -38,6 +38,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'user_id',
                 'label' => 'User',
+                'enableSorting' => false,
                 'value' => function ($model) {
                     return $model->user ? $model->user->username : 'Unknown';
                 }
@@ -45,6 +46,7 @@ $this->params['breadcrumbs'][] = $this->title;
             [
                 'attribute' => 'track_at',
                 'label' => 'Track',
+                'enableSorting' => false,
                 'format' => ['datetime', 'php:Y-m-d H:i:s']
             ],
             [
