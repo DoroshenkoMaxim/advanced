@@ -44,8 +44,8 @@ return [
             'errorAction' => 'site/error',
         ],
         'urlManager' => [
-            'enablePrettyUrl' => false,
-            'showScriptName' => true,
+            'enablePrettyUrl' => true,
+            'showScriptName' => false,
             'enableStrictParsing' => false,
             'rules' => [
                 '' => 'site/index', // Главная страница

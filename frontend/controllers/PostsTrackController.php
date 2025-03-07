@@ -13,16 +13,13 @@ use yii\filters\VerbFilter;
  */
 class PostsTrackController extends Controller
 {
-    /**
-     * @inheritDoc
-     */
     public function behaviors()
     {
         return array_merge(
             parent::behaviors(),
             [
                 'verbs' => [
-                    'class' => VerbFilter::className(),
+                    'class' => VerbFilter::class,
                     'actions' => [
                         'delete' => ['POST'],
                     ],
@@ -32,29 +29,25 @@ class PostsTrackController extends Controller
     }
 
     /**
-     * Lists all PostsTrack models.
-     *
-     * @return string
+     * Список всех PostsTrack через keyset pagination, без поиска/сортировки.
      */
     public function actionIndex()
     {
         $searchModel = new PostsTrackSearch();
-        $dataProvider = $searchModel->search($this->request->queryParams);
+        // Вызываем searchKeyset
+        $dataProvider = $searchModel->searchKeyset(\Yii::$app->request->queryParams);
 
-        // Указываем, что нам нужны связанные таблицы
+        // Подгружаем связи (post, user) для вывода в GridView
         $dataProvider->query->with(['post', 'user']);
 
         return $this->render('index', [
-            'searchModel' => $searchModel,
+            'searchModel'  => $searchModel,
             'dataProvider' => $dataProvider,
         ]);
     }
 
     /**
      * Displays a single PostsTrack model.
-     * @param int $id ID
-     * @return string
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionView($id)
     {
@@ -65,8 +58,6 @@ class PostsTrackController extends Controller
 
     /**
      * Creates a new PostsTrack model.
-     * If creation is successful, the browser will be redirected to the 'view' page.
-     * @return string|\yii\web\Response
      */
     public function actionCreate()
     {
@@ -87,16 +78,12 @@ class PostsTrackController extends Controller
 
     /**
      * Updates an existing PostsTrack model.
-     * If update is successful, the browser will be redirected to the 'view' page.
-     * @param int $id ID
-     * @return string|\yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionUpdate($id)
     {
         $model = $this->findModel($id);
 
-        if ($this->request->isPost && $model->load($this->request->post()) && $model->save()) {
+        if ($model->load($this->request->post()) && $model->save()) {
             return $this->redirect(['view', 'id' => $model->id]);
         }
 
@@ -107,25 +94,13 @@ class PostsTrackController extends Controller
 
     /**
      * Deletes an existing PostsTrack model.
-     * If deletion is successful, the browser will be redirected to the 'index' page.
-     * @param int $id ID
-     * @return \yii\web\Response
-     * @throws NotFoundHttpException if the model cannot be found
      */
     public function actionDelete($id)
     {
         $this->findModel($id)->delete();
-
         return $this->redirect(['index']);
     }
 
-    /**
-     * Finds the PostsTrack model based on its primary key value.
-     * If the model is not found, a 404 HTTP exception will be thrown.
-     * @param int $id ID
-     * @return PostsTrack the loaded model
-     * @throws NotFoundHttpException if the model cannot be found
-     */
     protected function findModel($id)
     {
         if (($model = PostsTrack::findOne(['id' => $id])) !== null) {

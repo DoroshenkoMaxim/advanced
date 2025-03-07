@@ -4,65 +4,62 @@ namespace frontend\models;
 
 use yii\base\Model;
 use yii\data\ActiveDataProvider;
-use frontend\models\PostsTrack;
 
 /**
- * PostsTrackSearch represents the model behind the search form of `frontend\models\PostsTrack`.
+ * PostsTrackSearch - "поисковая" модель без реального поиска/сортировки,
+ * использует keyset pagination (нет offset/limit).
  */
 class PostsTrackSearch extends PostsTrack
 {
-    /**
-     * {@inheritdoc}
-     */
     public function rules()
     {
+        // Можно указать поля как integer, но реального фильтра у нас нет
         return [
             [['id', 'post_id', 'user_id', 'track_at'], 'integer'],
         ];
     }
 
-    /**
-     * {@inheritdoc}
-     */
     public function scenarios()
     {
-        // bypass scenarios() implementation in the parent class
         return Model::scenarios();
     }
 
     /**
-     * Creates data provider instance with search query applied
-     *
-     * @param array $params
-     * @param string|null $formName Form name to be used into `->load()` method.
-     *
-     * @return ActiveDataProvider
+     * Метод с keyset-пагинацией:
+     *  - Отключаем обычную пагинацию
+     *  - Принимаем lastSeenId из GET
+     *  - WHERE id < lastSeenId, ORDER BY id DESC, LIMIT 20
      */
-    public function search($params, $formName = null)
+    public function searchKeyset($params)
     {
         $query = PostsTrack::find();
 
-        // add conditions that should always apply here
-
+        // Отключаем стандартную пагинацию
         $dataProvider = new ActiveDataProvider([
-            'query' => $query,
+            'query'      => $query,
+            'pagination' => false,
+            // Если не хотим никакой пользовательской сортировки,
+            // можно отключить sort вообще:
+            'sort'       => false,
         ]);
 
-        $this->load($params, $formName);
-
+        // Загружаем параметры (хотя у нас реального фильтра нет)
+        $this->load($params);
         if (!$this->validate()) {
-            // uncomment the following line if you do not want to return any records when validation fails
-            // $query->where('0=1');
+            $query->where('0=1'); // если вдруг валидация не пройдена
             return $dataProvider;
         }
 
-        // grid filtering conditions
-        $query->andFilterWhere([
-            'id' => $this->id,
-            'post_id' => $this->post_id,
-            'user_id' => $this->user_id,
-            'track_at' => $this->track_at,
-        ]);
+        // keyset pagination
+        $lastSeenId = \Yii::$app->request->get('lastSeenId');
+        if ($lastSeenId) {
+            $query->andWhere(['<', 'id', $lastSeenId]);
+        }
+
+        // Фиксированный порядок: id DESC
+        $query->orderBy(['id' => SORT_DESC]);
+        // Показываем максимум 20 записей
+        $query->limit(20);
 
         return $dataProvider;
     }
