@@ -19,7 +19,7 @@ class UsersController extends Controller
     public function actionGenerateUsers($start = 1, $end = 100)
     {
         $faker = Faker::create();
-        $batchSize = 10; // Размер партии для одновременной записи
+        $batchSize = 2; // Размер партии для одновременной записи
         $rows = [];
         
         echo "Генерация пользователей с ID $start до $end...\n";
@@ -29,8 +29,8 @@ class UsersController extends Controller
             $email = $faker->email;
             $passwordHash = Yii::$app->security->generatePasswordHash('password');
             $authKey = Yii::$app->security->generateRandomString();
-            $createdAt = time();
-            $updatedAt = time();
+            $createdAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
+            $updatedAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
             $lastLoginAt = time() - rand(0, 30 * 24 * 60 * 60);
             $registrationIp = $faker->ipv4;
             

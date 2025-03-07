@@ -6,8 +6,8 @@ class m250305_154153_generate_users extends Migration
 {
     public function safeUp()
     {
-        $count = 1000;      // Общее количество пользователей
-        $chunkSize = 10;    // Размер каждого чанка (по 10 пользователей)
+        $count = 10;      // Общее количество пользователей
+        $chunkSize = 2;    // Размер каждого чанка (по 10 пользователей)
         $numChunks = ceil($count / $chunkSize);
         $maxProcesses = 2;    // Максимальное количество одновременно запущенных процессов
 

@@ -46,5 +46,11 @@ return [
         ],
         */
     ],
+    // 'modules' => [
+    //     'gii' => [
+    //         'class' => 'yii\gii\Module',
+    //         'allowedIPs' => ['127.0.0.1', '::1'], // Добавьте ваш IP, если сервер удаленный
+    //     ],
+    // ],
     'params' => $params,
 ];

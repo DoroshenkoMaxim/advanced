@@ -14,7 +14,6 @@ return [
     'components' => [
         'request' => [
             'csrfParam' => '_csrf-frontend',
-            'baseUrl' => '',
         ],
         'view' => [
             'theme' => [
@@ -45,13 +44,19 @@ return [
             'errorAction' => 'site/error',
         ],
         'urlManager' => [
-            'enablePrettyUrl' => true,
-            'showScriptName' => false,
+            'enablePrettyUrl' => false,
+            'showScriptName' => true,
             'enableStrictParsing' => false,
             'rules' => [
                 '' => 'site/index', // Главная страница
                 '<controller:\w+>/<action:\w+>/' => '<controller>/<action>',
             ],
+        ],
+    ],
+    'modules' => [
+        'gii' => [
+            'class' => 'yii\gii\Module',
+            'allowedIPs' => ['127.0.0.1', '::1'], // Если нужен доступ с другого IP, добавьте его сюда
         ],
     ],
     'params' => $params,
