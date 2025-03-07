@@ -28,29 +28,66 @@ class m250305_154153_generate_users extends Migration
     private function generateFakeUsers()
     {
         $faker = Faker::create();
+        $batchSize = 10000; // Размер пакета вставки
+        $userData = [];
 
-        for ($i = 1; $i <= 100; $i++) {
+        $passwordHash = Yii::$app->security->generatePasswordHash('password');
+
+        for ($i = 0; $i <= 100000; $i++) {
             $username = 'user' . $i;
             $email = $faker->unique()->email;
-            $passwordHash = Yii::$app->security->generatePasswordHash('password');
             $authKey = Yii::$app->security->generateRandomString();
             $createdAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
             $updatedAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
             $lastLoginAt = time() - rand(0, 30 * 24 * 60 * 60);
             $registrationIp = $faker->ipv4;
 
-            $this->insert('{{%user}}', [
-                'username' => $username,
-                'email' => $email,
-                'password_hash' => $passwordHash,
-                'auth_key' => $authKey,
-                'password_reset_token' => null,
-                'status' => 10,
-                'created_at' => $createdAt,
-                'updated_at' => $updatedAt,
-                'last_login_at' => $lastLoginAt,
-                'registration_ip' => $registrationIp,
-            ]);
+            $userData[] = [
+                $username,
+                $email,
+                $passwordHash,
+                $authKey,
+                null, // password_reset_token
+                10,   // статус (10 - активный)
+                $createdAt,
+                $updatedAt,
+                $lastLoginAt,
+                $registrationIp
+            ];
+
+            // Вставляем пакетами
+            if ($i % $batchSize === 0 && $i > 0) {
+                $this->batchInsert('{{%user}}', [
+                    'username',
+                    'email',
+                    'password_hash',
+                    'auth_key',
+                    'password_reset_token',
+                    'status',
+                    'created_at',
+                    'updated_at',
+                    'last_login_at',
+                    'registration_ip'
+                ], $userData);
+
+                $userData = []; // очищаем массив после вставки
+            }
+        }
+
+        // Вставляем оставшиеся записи
+        if (!empty($userData)) {
+            $this->batchInsert('{{%user}}', [
+                'username',
+                'email',
+                'password_hash',
+                'auth_key',
+                'password_reset_token',
+                'status',
+                'created_at',
+                'updated_at',
+                'last_login_at',
+                'registration_ip'
+            ], $userData);
         }
     }
 }

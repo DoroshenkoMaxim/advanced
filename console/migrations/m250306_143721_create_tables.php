@@ -82,38 +82,67 @@ class m250306_143721_create_tables extends Migration
         $faker = Faker::create();
         $userIds = $this->getDb()->createCommand('SELECT id FROM {{%user}}')->queryColumn();
 
-        // Генерация 1 000 000 постов
-        for ($i = 0; $i < 100; $i++) {
-            $this->insert('{{%posts}}', [
+        $batchSize = 10000; // Размер пакета
+        $postData = [];
+        $postViewsData = [];
+        $postSubscribersData = [];
+
+        for ($i = 1; $i <= 1000000; $i++) {
+            $createdAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
+            $updatedAt = $faker->dateTimeBetween('-1 year', 'now')->getTimestamp();
+            $userId = $faker->randomElement($userIds);
+
+            $postData[] = [
                 'name' => $faker->sentence(6),
                 'text' => $faker->paragraph(10),
                 'fields' => $faker->text(50),
-                'created_by' => $faker->randomElement($userIds),
-                'created_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
-                'updated_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
-            ]);
-        }
+                'created_by' => $userId,
+                'created_at' => $createdAt,
+                'updated_at' => $updatedAt,
+            ];
 
-        // Генерация 100 000 000 просмотров (минимум 100 на пост)
-        for ($i = 0; $i < 10; $i++) {
-            for ($j = 0; $j < 5; $j++) {
-                $this->insert('{{%posts_visitors}}', [
-                    'post_id' => $i + 1,
+            // Генерация просмотров
+            $viewsCount = $faker->numberBetween(100, 150);
+            for ($view = 0; $view < $viewsCount; $view++) {
+                $postViewsData[] = [
+                    'post_id' => $i,
                     'visitor_id' => $faker->randomElement($userIds),
                     'view_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
-                ]);
+                ];
+            }
+
+            // Генерация подписчиков
+            $subscriberCount = $faker->numberBetween(10, 15);
+            $subscribers = $faker->randomElements($userIds, $subscriberCount, false);
+            foreach ($subscribers as $subscriber) {
+                $postSubscribersData[] = [
+                    'post_id' => $i,
+                    'user_id' => $subscriber,
+                    'track_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
+                ];
+            }
+
+            // Вставляем пакетами
+            if ($i % $batchSize === 0) {
+                $this->batchInsert('{{%posts}}', ['name', 'text', 'fields', 'created_by', 'created_at', 'updated_at'], $postData);
+                $this->batchInsert('{{%posts_visitors}}', ['post_id', 'visitor_id', 'view_at'], $postViewsData);
+                $this->batchInsert('{{%posts_track}}', ['post_id', 'user_id', 'track_at'], $postSubscribersData);
+
+                $postData = [];
+                $postViewsData = [];
+                $postSubscribersData = [];
             }
         }
 
-        // Генерация подписок (минимум 10 подписчиков на пост)
-        for ($i = 0; $i < 20; $i++) {
-            for ($j = 0; $j < 2; $j++) {
-                $this->insert('{{%posts_track}}', [
-                    'post_id' => $i + 1,
-                    'user_id' => $faker->randomElement($userIds),
-                    'track_at' => $faker->dateTimeBetween('-1 year', 'now')->getTimestamp(),
-                ]);
-            }
+        // Вставляем оставшиеся записи
+        if (!empty($postData)) {
+            $this->batchInsert('{{%posts}}', ['name', 'text', 'fields', 'created_by', 'created_at', 'updated_at'], $postData);
+        }
+        if (!empty($postViewsData)) {
+            $this->batchInsert('{{%posts_visitors}}', ['post_id', 'visitor_id', 'view_at'], $postViewsData);
+        }
+        if (!empty($postSubscribersData)) {
+            $this->batchInsert('{{%posts_track}}', ['post_id', 'user_id', 'track_at'], $postSubscribersData);
         }
     }
 }
